@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 
 @Service
@@ -36,18 +37,24 @@ public class SearchService {
         bridge.setAsync(true);
 
         List<Query> queries = searchTerms.stream().map(this::determineType).toList();
+
         try {
             return client.getClient().search(s -> s
-                    .index("song-lyrics")
-                    .query(q ->
-                    q.bool(b -> b.must(queries))), Lyrics.class).hits().hits().stream().map(this::mapHitToLyrics).toList();
+                            .index("song-lyrics")
+                            .query(q ->
+                                    q.bool(b -> b.must(queries.stream().filter(Objects::isNull).toList()))), Lyrics.class)
+                    .hits()
+                    .hits()
+                    .stream()
+                    .map(this::mapHitToLyrics)
+                    .toList();
         } catch (IOException e) {
             throw new IllegalArgumentException("Malformed search Object, or failing Elasticsearch server.");
         }
     }
 
     private Query determineType(SearchDTO searchDTO) {
-        bridge.send("output",mapToMessage(searchDTO));
+        bridge.send("output", mapToMessage(searchDTO));
         return switch (searchDTO.getType()) {
             case "term" -> TermQuery.of(t -> t
                     .field(searchDTO.getField())
@@ -72,11 +79,11 @@ public class SearchService {
                 .setId(lyricsHit.id());
     }
 
-    private Message<String> mapToMessage(SearchDTO searchDTO){
+    private Message<String> mapToMessage(SearchDTO searchDTO) {
         Gson gson = new Gson();
-            return MessageBuilder
-                    .withPayload(gson.toJson(searchDTO))
-                    .setHeader(KafkaHeaders.KEY,String.valueOf(searchDTO.getValue()))
-                    .build();
+        return MessageBuilder
+                .withPayload(gson.toJson(searchDTO))
+                .setHeader(KafkaHeaders.KEY, String.valueOf(searchDTO.getValue()))
+                .build();
     }
 }
