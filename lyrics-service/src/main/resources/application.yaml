@@ -1,0 +1,31 @@
+spring:
+  cloud:
+    stream:
+      kafka:
+        binder:
+          brokers: localhost:9092
+          configuration:
+            key:
+              serializer: org.apache.kafka.common.serialization.StringSerializer
+            value:
+              serializer: org.apache.kafka.common.serialization.StringSerializer
+      bindings:
+        output:
+          producer:
+            use-native-encoding: true
+          destination: search-logs
+  application:
+    name: lyrics-service
+server:
+  port: 8888
+eureka:
+  client:
+    service-url:
+      defaultZone: 'http://localhost:8111/eureka/'
+elastic:
+  client:
+    url: http://localhost:9200
+    username: elastic
+    password: ICQIb5Awr1erxiAPeE09
+    key: YzlfZkg0OEJZdmNyODJLb2dpZGo6aDZHZmRsc2ZUSk9aeVNaQ3NvUmU4dw==
+

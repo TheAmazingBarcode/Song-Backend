@@ -1,0 +1,40 @@
+logging:
+  level:
+    org:
+      springframework:
+        cloud:
+          gateway: TRACE
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: song-service
+          uri: 'lb://song-service/'
+          predicates:
+            - Path=/song/**, /performer/**, /author/**, /genre/**, /user/**
+        - id: lyrics-service
+          uri: 'lb://lyrics-service/'
+          predicates:
+            - Path=/lyrics/**, /search/**
+        - id: cache-service
+          uri: 'lb://cache-service/'
+          predicates:
+            - Path=/cache/**
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedHeaders: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+  application:
+    name: gateway-servicee ure
+server:
+  port: 7777
+eureka:
+  client:
+    service-url:
+      defaultZone: 'http://localhost:8111/eureka'
