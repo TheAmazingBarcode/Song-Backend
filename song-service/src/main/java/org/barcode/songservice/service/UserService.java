@@ -24,7 +24,7 @@ public class UserService {
     public UserService(UserRepo userRepo, JwtUtil jwtUtil) {
         this.userRepo = userRepo;
         this.jwtUtil = jwtUtil;
-        this.passwordEncoder = new BCryptPasswordEncoder(15);
+        this.passwordEncoder = new BCryptPasswordEncoder(6);
     }
 
     public String registerUser(User user) {

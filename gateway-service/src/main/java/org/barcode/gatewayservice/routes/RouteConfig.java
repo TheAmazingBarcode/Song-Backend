@@ -16,18 +16,24 @@ public class RouteConfig {
     @Bean
     public RouteLocator routes(RouteLocatorBuilder builder){
         return builder.routes()
-                .route("song-delete", r->r.path("/*/delete/**")
+                .route("song-delete", r->r.path("/song/delete/**")
                         .filters(f -> f.filter(filter))
                         .uri("lb://song-service/"))
-                .route("lyrics-delete", r->r.path("/*/delete/**")
-                        .filters(f -> f.filter(filter))
-                        .uri("lb://lyrics-service/"))
-                .route("song-update", r->r.path("/*/update/**")
+                .route("song-update", r->r.path("/song/update/**")
                         .filters(f -> f.filter(filter))
                         .uri("lb://song-service/"))
-                .route("song-new",r->r.path("/*/upload/**")
+                .route("song-new",r->r.path("/song/upload/**")
                         .filters(f -> f.filter(filter))
                         .uri("lb://song-service"))
+                .route("lyrics-delete", r->r.path("/lyrics/delete/**")
+                        .filters(f -> f.filter(filter))
+                        .uri("lb://lyrics-service/"))
+                .route("lyrics-update", r->r.path("/lyrics/update/**")
+                        .filters(f -> f.filter(filter))
+                        .uri("lb://lyrics-service/"))
+                .route("lyrics-new", r->r.path("/lyrics/new/**")
+                        .filters(f -> f.filter(filter))
+                        .uri("lb://lyrics-service/"))
                 .build();
     }
 }
