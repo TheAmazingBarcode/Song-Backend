@@ -18,4 +18,6 @@ This repository contains all the code for the song-searcher back end part of the
 ## Schema of the project
  (Does not fully portray the actual code structure, rather the general architecture and how it works)
 
+(Use the link if you cannot enlarge the image)
+https://i.imgur.com/MvlVjNm.png
 ![ProjectSchema](https://i.imgur.com/MvlVjNm.png)
