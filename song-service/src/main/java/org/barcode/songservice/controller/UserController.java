@@ -14,13 +14,13 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @PostMapping(value = "register",consumes = "application/json")
+    @PostMapping(value = "register",consumes = "application/json",produces = "application/text")
     public ResponseEntity<String> registerUser(@RequestBody User user){
         return ResponseEntity.ok(userService.registerUser(user));
     }
 
-    @PutMapping(value = "logIn",consumes = "application/json")
-    public ResponseEntity<Boolean> logInUser(@RequestBody Map<String,String> details){
+    @PutMapping(value = "logIn",consumes = "application/json",produces = "application/text")
+    public ResponseEntity<String> logInUser(@RequestBody Map<String,String> details){
         return userService.logInUser(details);
     }
 }

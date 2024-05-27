@@ -33,26 +33,21 @@ public class UserService {
         return jwtUtil.generateToken(generateClaims(userCopy));
     }
 
-    public ResponseEntity<Boolean> logInUser(Map<String, String> details) {
+    public ResponseEntity<String> logInUser(Map<String, String> details) {
 
         if (details.size() != 2)
             return ResponseEntity
                     .status(HttpURLConnection.HTTP_UNAUTHORIZED)
-                    .body(false);
+                    .body("error");
 
         User user = userRepo.findUserByEmail(details.get("email"));
 
         if (user == null || !passwordEncoder.matches(details.get("password"), user.getPassword()))
             return ResponseEntity
                     .status(HttpURLConnection.HTTP_UNAUTHORIZED)
-                    .body(false);
+                    .body("wrong credentials");
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + jwtUtil.generateToken(generateClaims(user)));
-
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body(true);
+        return ResponseEntity.ok(jwtUtil.generateToken(generateClaims(user)));
     }
 
     private Map<String, String> generateClaims(User user) {
