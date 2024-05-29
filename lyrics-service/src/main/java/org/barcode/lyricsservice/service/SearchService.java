@@ -4,6 +4,7 @@ package org.barcode.lyricsservice.service;
 import co.elastic.clients.elasticsearch._types.query_dsl.MatchPhraseQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.TermQuery;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import com.google.gson.Gson;
 import org.barcode.lyricsservice.configuration.ElasticClient;
@@ -34,7 +35,7 @@ public class SearchService {
     }
 
     public List<Lyrics> search(List<SearchDTO> searchTerms) {
-        bridge.setAsync(true);
+//        bridge.setAsync(true);
 
         List<Query> queries = searchTerms.stream().map(this::determineType).toList();
 
@@ -42,7 +43,7 @@ public class SearchService {
             return client.getClient().search(s -> s
                             .index("song-lyrics")
                             .query(q ->
-                                    q.bool(b -> b.must(queries.stream().filter(Objects::isNull).toList()))), Lyrics.class)
+                                    q.bool(b -> b.must(queries.stream().filter(Objects::nonNull).toList()))), Lyrics.class)
                     .hits()
                     .hits()
                     .stream()

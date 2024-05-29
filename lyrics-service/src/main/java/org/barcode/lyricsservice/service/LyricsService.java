@@ -124,7 +124,7 @@ public class LyricsService {
                     .search(s -> s
                             .index("song-lyrics")
                             .query(q -> q.bool
-                                    (b -> b.must(queries.stream().filter(Objects::isNull).toList()))), Lyrics.class)
+                                    (b -> b.must(queries.stream().filter(Objects::nonNull).toList()))), Lyrics.class)
                     .hits()
                     .hits()
                     .stream()
