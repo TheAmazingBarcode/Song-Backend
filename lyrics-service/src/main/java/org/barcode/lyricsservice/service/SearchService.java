@@ -35,7 +35,7 @@ public class SearchService {
     }
 
     public List<Lyrics> search(List<SearchDTO> searchTerms) {
-        //bridge.setAsync(true);
+        bridge.setAsync(true);
 
         List<Query> queries = searchTerms.stream().map(this::determineType).toList();
 
