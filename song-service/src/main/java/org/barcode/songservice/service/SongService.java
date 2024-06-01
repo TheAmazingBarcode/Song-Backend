@@ -161,6 +161,8 @@ public class SongService {
 
         Song copy = songRepo.save(song);
 
+
+        //This is probably a bad idea, but Many to Many with Hibernate is not a great experience
         songWriterRepo.deleteSongWritersBySongWriterSource(copy);
         participationRepo.deleteParticipationsBySongPerformerSource(copy);
 
