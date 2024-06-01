@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface SongWriterRepo extends JpaRepository<SongWriter,Integer> {
+public interface SongWriterRepo extends JpaRepository<SongWriter, Integer> {
     void deleteSongWritersBySongWriterSource(Song entity);
 
     List<SongWriter> findSongWritersBySongWriter(Author songWriter);

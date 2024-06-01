@@ -91,11 +91,14 @@ public class LyricsService {
 
     public Lyrics updateLyrics(Lyrics lyrics) {
         try {
-            return Objects.requireNonNull(client.getClient()
-                    .update(u -> u.index("song-lyrics")
-                    .doc(lyrics), Lyrics.class)
-                    .get())
-                    .source();
+            System.out.println(client.getClient()
+                            .update(u -> u.index("song-lyrics")
+                                    .id(lyrics.getId())
+                                    .doc(lyrics)
+                                    , Lyrics.class)
+                            .get());
+            return Lyrics.builder().id(lyrics.getId()).build();
+
         } catch (IOException e) {
             log.error("Error with elasticsearch, check the health or if it is running");
             return null;
@@ -106,8 +109,8 @@ public class LyricsService {
     public Boolean deleteLyrics(String id) {
         try {
             return client.getClient().delete(d -> d
-                    .index("song-lyrics")
-                    .id(id))
+                            .index("song-lyrics")
+                            .id(id))
                     .result()
                     .toString()
                     .equalsIgnoreCase("deleted");

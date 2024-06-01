@@ -40,49 +40,43 @@ public class SongService {
     @Transactional
     public SongDTO newSong(SongDTO songDTO) {
 
-            Set<SongWriter> authors = extractSongWriters(songDTO);
+        Set<SongWriter> authors = extractSongWriters(songDTO);
 
-            Set<Participation> performers = extractParticipations(songDTO);
+        Set<Participation> performers = extractParticipations(songDTO);
 
-            List<String> names = extractNames(songDTO);
+        List<String> names = extractNames(songDTO);
 
-            //Talk to the Lyrics service which uses ElasticSearch to store large text objects.
+        //Talk to the Lyrics service which uses ElasticSearch to store large text objects.
 
-            String lyricsId = createLyricsObject(LyricsDTO
-                    .builder()
-                    .lyrics(songDTO.getLyrics())
-                    .name(songDTO.getName())
-                    .names(names)
-                    .genre(songDTO.getGenre().getName())
-                    .build());
+        String lyricsId = createLyricsObject(transformSong(songDTO));
 
-            Song song = Song.builder()
-                    .id(songDTO.getId())
-                    .genre(songDTO.getGenre())
-                    .name(songDTO.getName())
-                    .authors(authors)
-                    .performers(performers)
-                    .lyricsId(lyricsId)
-                    .build();
+        Song song = Song.builder()
+                .id(songDTO.getId())
+                .genre(songDTO.getGenre())
+                .name(songDTO.getName())
+                .authors(authors)
+                .performers(performers)
+                .lyricsId(lyricsId)
+                .build();
 
-            Song copy = songRepo.save(song);
+        Song copy = songRepo.save(song);
 
-            authors.forEach(author -> author.setSongWriterSource(copy));
-            performers.forEach(performer -> performer.setSongPerformerSource(copy));
+        authors.forEach(author -> author.setSongWriterSource(copy));
+        performers.forEach(performer -> performer.setSongPerformerSource(copy));
 
-            songWriterRepo.saveAll(authors);
-            participationRepo.saveAll(performers);
+        songWriterRepo.saveAll(authors);
+        participationRepo.saveAll(performers);
 
-            return mapSongToDTO(copy);
+        return mapSongToDTO(copy);
 
     }
 
-    private List<String> extractNames(SongDTO songDTO){
+    private List<String> extractNames(SongDTO songDTO) {
         List<String> names = new ArrayList<>();
-        songDTO.getAuthors().forEach(author -> names.add(author.getFirstName()+" "+author.getLastName()));
+        songDTO.getAuthors().forEach(author -> names.add(author.getFirstName() + " " + author.getLastName()));
         songDTO.getPerformers().forEach(performer -> {
             names.add(performer.getArtistName());
-            names.add(performer.getFirstName()+" "+performer.getLastName());
+            names.add(performer.getFirstName() + " " + performer.getLastName());
         });
         return names;
     }
@@ -107,6 +101,15 @@ public class SongService {
                 .block();
     }
 
+    private LyricsDTO transformSong(SongDTO songDTO) {
+        return LyricsDTO.builder()
+                .id(songDTO.getLyricsID())
+                .lyrics(songDTO.getLyrics())
+                .name(songDTO.getName())
+                .names(extractNames(songDTO))
+                .genre(songDTO.getGenre().getName())
+                .build();
+    }
 
     private Set<SongWriter> extractSongWriters(SongDTO songDTO) {
         return songDTO.getAuthors().stream().map(author -> SongWriter
@@ -143,35 +146,34 @@ public class SongService {
                 .id(songDTO.getId())
                 .name(songDTO.getName())
                 .lyricsId(songDTO.getLyricsID())
-                .authors(extractSongWriters(songDTO))
-                .performers(extractParticipations(songDTO))
                 .genre(songDTO.getGenre())
                 .build();
 
-        /*Check if Lyrics are the same By Contacting the LyricsService using the lyricsID.
-         If they are not, update the lyrics in the Elasticsearch engine as well.
-        */
+        LyricsDTO lyricsDTO = transformSong(songDTO);
 
-        LyricsDTO lyricsDTO = getLyricsObject(songDTO.getLyricsID());
-        if (!lyricsDTO.getLyrics().equals(songDTO.getLyrics())) {
-            lyricsDTO.setLyrics(songDTO.getLyrics());
-            webClientBuilder.build().put()
-                    .uri("http://lyrics-service/lyrics/update")
-                    .accept(MediaType.APPLICATION_JSON)
-                    .bodyValue(lyricsDTO)
-                    .retrieve()
-                    .bodyToMono(LyricsDTO.class)
-                    .block();
-        }
+        webClientBuilder.build().put()
+                .uri("http://lyrics-service/lyrics/update")
+                .accept(MediaType.APPLICATION_JSON)
+                .bodyValue(lyricsDTO)
+                .retrieve()
+                .bodyToMono(LyricsDTO.class)
+                .block();
 
-        song = songRepo.save(song);
-        participationRepo.deleteParticipationsBySongPerformerSource(song);
-        songWriterRepo.deleteSongWritersBySongWriterSource(song);
+        Song copy = songRepo.save(song);
 
-        participationRepo.saveAll(song.getPerformers());
-        songWriterRepo.saveAll(song.getAuthors());
+        songWriterRepo.deleteSongWritersBySongWriterSource(copy);
+        participationRepo.deleteParticipationsBySongPerformerSource(copy);
 
-        return mapSongToDTO(song);
+        copy.setAuthors(extractSongWriters(songDTO));
+        copy.setPerformers(extractParticipations(songDTO));
+
+        copy.getAuthors().forEach(songWriter -> songWriter.setSongWriterSource(copy));
+        copy.getPerformers().forEach(participation -> participation.setSongPerformerSource(copy));
+
+        songWriterRepo.saveAll(copy.getAuthors());
+        participationRepo.saveAll(copy.getPerformers());
+
+        return mapSongToDTO(copy);
     }
 
     @Transactional
@@ -185,7 +187,7 @@ public class SongService {
         songRepo.deleteById(id);
 
         webClientBuilder.build().delete()
-                .uri("http://lyrics-service/lyrics/delete/"+song.getLyricsId())
+                .uri("http://lyrics-service/lyrics/delete/" + song.getLyricsId())
                 .retrieve()
                 .bodyToMono(Boolean.class)
                 .block();
